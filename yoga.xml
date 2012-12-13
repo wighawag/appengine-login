@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project>
+	<yoga-version>1</yoga-version>
+	<compiler-version>2.0.9</compiler-version>
+	
+	<id>com.wighawag.appengine-login</id>
+	<version>0.0.1</version>
+	
+	<main>LoginTest</main>
+	
+	<sources>
+		<source path="src" />
+	</sources>
+	
+	<targets hxml="compile">
+		<target name="neko" />		
+	</targets>
+	
+	<dependencies>
+		<haxelib name="hxssl" />		
+	</dependencies>
+</project>

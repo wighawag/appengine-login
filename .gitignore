@@ -1,0 +1,13 @@
+out
+.idea/
+*.iml
+*.build
+target/
+*.hxproj
+.munit
+*.hxml
+project.nmml
+test.hxml
+test/TestMain.hx
+test/TestSuite.hx
+
