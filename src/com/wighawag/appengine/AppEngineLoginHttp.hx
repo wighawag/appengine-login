@@ -11,53 +11,68 @@ class AppEngineLoginHttp extends Http{
     private var password : String;
     private var source : String;
 
+    private var attemptUnauthenticatedRequest : Bool;
+
+    private var cookie : String;
+
     private var gotError : Bool;
 
-    public function new(url : String, username : String, password : String, ?source : String = "nekoClient") {
+    public function new(url : String, username : String, password : String, ?attemptUnauthenticatedRequest : Bool = false, ?source : String = "nekoClient") {
         super(url);
         this.username = username;
         this.password = password;
         this.source = source;
+        this.attemptUnauthenticatedRequest = attemptUnauthenticatedRequest;
+        this.cookie = null;
         gotError = false;
     }
 
     override public function request(post:Bool):Void {
+
+        if (cookie != null){
+            finalRequest(cookie, post);
+            return;
+        }
+
         var result : String = null;
         gotError = false;
         var gotData : Bool = false;
 
-        // attempts unauenticated acces:
-        var redirectedForGoogleLogin : Bool = false;
+        if(attemptUnauthenticatedRequest){
+            // attempts unauenticated acces:
+            var redirectedForGoogleLogin : Bool = false;
 
-        var unautenticatedRequestAttempt = new haxe.Http(url);
-        unautenticatedRequestAttempt.onStatus = function(status : Int){
-            if (status == 302)
-            {
-                var newLocation = unautenticatedRequestAttempt.responseHeaders.get("Location");
-                if (newLocation.startsWith("https://www.google.com/accounts/ServiceLogin")){
-                    redirectedForGoogleLogin = true;
+            var unautenticatedRequestAttempt = new haxe.Http(url);
+            unautenticatedRequestAttempt.onStatus = function(status : Int){
+                if (status == 302)
+                {
+                    var newLocation = unautenticatedRequestAttempt.responseHeaders.get("Location");
+                    if (newLocation.startsWith("https://www.google.com/accounts/ServiceLogin")){
+                        redirectedForGoogleLogin = true;
+                    }
+                }
+                // dispatch status only if not from the google login as this will be handled internally here
+                if(!redirectedForGoogleLogin){
+                    onStatus(status);
+                }
+
+            }
+            unautenticatedRequestAttempt.onError = function(e){
+                dealWithError(e);
+            }
+            unautenticatedRequestAttempt.onData = function(data : String){
+                if (!redirectedForGoogleLogin){
+                    onData(data);
+                    gotData = true;
                 }
             }
-            // dispatch status only if not from the google login as this will be handled internally here
-            if(!redirectedForGoogleLogin){
-                onStatus(status);
+            unautenticatedRequestAttempt.request(false);
+
+
+            if (gotError || gotData){
+                return;
             }
 
-        }
-        unautenticatedRequestAttempt.onError = function(e){
-            dealWithError(e);
-        }
-        unautenticatedRequestAttempt.onData = function(data : String){
-            if (!redirectedForGoogleLogin){
-                onData(data);
-                gotData = true;
-            }
-        }
-        unautenticatedRequestAttempt.request(false);
-
-
-        if (gotError || gotData){
-            return;
         }
 
         var protocolLessUrl = url;
@@ -117,8 +132,6 @@ class AppEngineLoginHttp extends Http{
         }
 
         // get the cookie :
-
-        var cookie : String = null;
         var cookieReqUrl = appLoginUrl + "?" +
         "continue=" + StringTools.urlEncode(url) + "&" +
         "auth=" + StringTools.urlEncode(authToken);
@@ -140,7 +153,10 @@ class AppEngineLoginHttp extends Http{
         }
 
         // execute tha actual request with the cookie
+        finalRequest(cookie, post);
+    }
 
+    private function finalRequest(cookie : String, post : Bool) : Void{
         setHeader("Cookie", cookie);
         if (post){
             //add Content-Length as appengine require it for POST request

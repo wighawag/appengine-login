@@ -39,6 +39,7 @@ class LoginTest {
         loginRequest.setPostData("dd=45");
         loginRequest.request(true);
 
+
         Sys.println("AppEngineLoginHttp with auth required:");
         var loginRequest = new AppEngineLoginHttp(authUrl, username, password);
         loginRequest.onStatus = function(status : Int){
@@ -54,6 +55,19 @@ class LoginTest {
         loginRequest.setPostData("dd=45");
         loginRequest.request(true);
 
+        Sys.println("AppEngineLoginHttp with auth required (resuing cookie):");
+        loginRequest.onStatus = function(status : Int){
+            Sys.println("status code : " + status);
+        }
+        loginRequest.onError = function(e){
+            Sys.println("Error : " + e);
+        }
+        loginRequest.onData = function(data : String){
+            Sys.println(data);
+        }
+
+        loginRequest.setPostData("dd=45");
+        loginRequest.request(true);
 
 
         Sys.println("Http :");
