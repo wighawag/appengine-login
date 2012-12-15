@@ -3,8 +3,6 @@ import haxe.Http;
 import haxe.io.Bytes;
 using StringTools;
 
-//TODO deal with duplication among AppEngineClientLogin and this class
-//AppEngineClientLogin attempts unauthenticated access first, do we want that in this too ?
 class AppEngineLoginHttp extends Http{
 
     private var username : String;
@@ -69,7 +67,7 @@ class AppEngineLoginHttp extends Http{
             unautenticatedRequestAttempt.request(false);
 
 
-            if (gotError || gotData){
+            if (gotError || gotData || !redirectedForGoogleLogin){
                 return;
             }
 
@@ -113,6 +111,9 @@ class AppEngineLoginHttp extends Http{
         loginRequest.onError = function(e) {
             dealWithError("googleLogin : " +  e);
         };
+//        loginRequest.onStatus = function(status : Int){
+//            Sys.println("status " + status);
+//        };
         loginRequest.onData = function(data : String)
         {
             var lines : Array<String> = data.split("\n");
@@ -125,7 +126,6 @@ class AppEngineLoginHttp extends Http{
             }
         }
         loginRequest.request(true);  // POST request
-
 
         if (gotError){
             return;
@@ -141,6 +141,9 @@ class AppEngineLoginHttp extends Http{
         {
             dealWithError("cookieRequest : " + e);
         }
+//        cookieRequest.onStatus = function(status : Int){
+//            Sys.println("status " + status);   // if successful : 302 but do not follow
+//        };
         cookieRequest.onData = function(data : String)
         {
             cookie = cookieRequest.responseHeaders.get("Set-Cookie");
@@ -163,8 +166,8 @@ class AppEngineLoginHttp extends Http{
             var contentLength : Int = 0;
             if (postData != null){
                 contentLength = Bytes.ofString(postData).length;
+                setHeader("Content-Length", "" + contentLength);
             }
-            setHeader("Content-Length", "" + contentLength);
         }
         super.request(post);
     }

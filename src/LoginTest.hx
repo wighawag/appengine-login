@@ -1,8 +1,10 @@
 package ;
 
 import com.wighawag.appengine.AppEngineLoginHttp;
+import com.wighawag.utils.ConsoleInput;
 import haxe.Http;
 import haxe.io.Bytes;
+
 
 using StringTools;
 
@@ -18,11 +20,11 @@ class LoginTest {
 
         //Sys.println("please enter your username :");
         //username = Sys.stdin().readLine();
-        username = param("username");
+        username = ConsoleInput.ask("username");
 
         //Sys.println("please enter your password :");
         //password = Sys.stdin().readLine();
-        password = param("password", true);
+        password = ConsoleInput.ask("password", true);
 
         Sys.println("AppEngineLoginHttp no auth required:");
         var loginRequest = new AppEngineLoginHttp(noAuthUrl, username, password);
@@ -88,19 +90,7 @@ class LoginTest {
 
     }
 
-    // taken from haxelib
-    static function param( name, ?passwd ) {
-        Sys.print(name+" : ");
-        if( passwd ) {
-            var s = new StringBuf();
-            var c;
-            while( (c = Sys.getChar(false)) != 13 )
-                s.addChar(c);
-            Sys.println("");
-            return s.toString();
-        }
-        return Sys.stdin().readLine();
-    }
+
 
     public function new() {
     }
